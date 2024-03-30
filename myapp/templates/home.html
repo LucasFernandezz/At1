@@ -6,8 +6,19 @@
     <title>Home</title>
 </head>
 <body>
-    <h1>Welcome to the Home Page</h1>
+    <h1>Welcome to the Home Page, {{ username }}!</h1>
     <a href="{% url 'tracker' %}"><button>Tracker</button></a>
     <a href="{% url 'logout' %}"><button>Logout</button></a>
+
+    <!-- JavaScript code for logging out on window close -->
+    <script>
+        window.addEventListener("beforeunload", function (e) {
+            // Send AJAX request to log out the user
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "{% url 'logout_on_window_close' %}", true);
+            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            xhr.send();
+        });
+    </script>
 </body>
 </html>
