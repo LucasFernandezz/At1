@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+        .error-message {
+            color: rgb(255, 0, 0);
+        }
+    </style>
 </head>
 <body>
     <h1>Register</h1>
@@ -15,5 +20,12 @@
         <input type="password" id="password" name="password"><br><br>
         <button type="submit">Register</button>
     </form>
+    <!-- Back button to the login page -->
+    <a href="{% url 'login' %}">Back to Login</a>
+    {% if messages %}
+        {% for message in messages %}
+            <p class="error-message">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>
