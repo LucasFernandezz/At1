@@ -1,12 +1,178 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracker</title>
+    <style>
+        /* Center the image */
+        .image-container {
+            position: relative;
+            text-align: center;
+        }
+        /* Style for the image */
+        .australia-image {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Style for the red dot */
+        .red-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        /* Style for the input box */
+        .number-input {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 16px;
+            width: 200px;
+        }
+        /* Style for the enter button */
+        .enter-button {
+            margin-top: 10px;
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #999;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #fff;
+        }
+        /* Disable the enter button initially */
+        .enter-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        /* Style for the table */
+        .number-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .number-table th, .number-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .number-table th {
+            background-color: #f2f2f2;
+        }
+        /* Style for the delete button */
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <h1>Tracker Page</h1>
-    <!-- Add your tracker content here -->
+    
+    <!-- Image of Australia centered on the page -->
+    <div class="image-container">
+        <img class="australia-image" src="{% static 'australia.png' %}" alt="Australia">
+    </div>
+
+    <!-- Input box for 8 numbers -->
+    <input type="text" class="number-input" maxlength="8" placeholder="Enter 8 numbers" pattern="[0-9]*" onkeypress="return isNumberKey(event)">
+
+    <!-- Enter button -->
+    <button class="enter-button" disabled>Find my Package</button>
+
+    <!-- Table to display input numbers -->
+    <table class="number-table">
+        <thead>
+            <tr>
+                <th>Package</th>
+                <th>ID</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const inputBox = document.querySelector('.number-input');
+            const enterButton = document.querySelector('.enter-button');
+            const tableBody = document.querySelector('.number-table tbody');
+            const imageContainer = document.querySelector('.image-container');
+            let packageCounter = 1; // Start the package counter from 1
+
+            // Function to generate a random color
+            function getRandomColor() {
+                const r = Math.floor(Math.random() * 200);
+                const g = Math.floor(Math.random() * 200);
+                const b = Math.floor(Math.random() * 200);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+
+            // Event listener for input change
+            inputBox.addEventListener('input', function () {
+                // Enable button if input has 8 characters, disable otherwise
+                enterButton.disabled = inputBox.value.length !== 8;
+            });
+
+            // Event listener for Enter button click
+            enterButton.addEventListener('click', function () {
+                // Check if 8 numbers are present
+                if (inputBox.value.length === 8) {
+                    // Generate random coordinates within the image bounds
+                    const x = Math.random() * 100; // Adjust this according to the image width
+                    const y = Math.random() * 100; // Adjust this according to the image height
+
+                    // Create red dot element with a unique identifier
+                    const dotId = `dot-${packageCounter}`;
+                    const redDot = document.createElement('div');
+                    redDot.classList.add('red-dot');
+                    redDot.id = dotId;
+                    redDot.style.left = `${x}%`;
+                    redDot.style.top = `${y}%`;
+                    redDot.style.backgroundColor = getRandomColor();
+
+                    // Append red dot element to the image container
+                    imageContainer.appendChild(redDot);
+
+                    // Add a row to the table
+                    const newRow = tableBody.insertRow();
+                    const packageCell = newRow.insertCell(0);
+                    const idCell = newRow.insertCell(1);
+                    const deleteCell = newRow.insertCell(2);
+                    packageCell.textContent = packageCounter++;
+                    idCell.textContent = inputBox.value;
+                    deleteCell.innerHTML = '<button class="delete-button">Delete</button>';
+                }
+            });
+
+            // Event listener for Delete button click
+            tableBody.addEventListener('click', function (event) {
+                if (event.target.classList.contains('delete-button')) {
+                    const row = event.target.closest('tr');
+                    const dotId = `dot-${row.cells[0].textContent}`;
+                    const dotToRemove = document.getElementById(dotId);
+                    dotToRemove.remove();
+                    row.remove();
+                }
+            });
+        });
+
+        // Function to allow only numeric input
+        function isNumberKey(event) {
+            const charCode = (event.which) ? event.which : event.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

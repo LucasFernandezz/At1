@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from .models import UserSession
+from .models import UserSession, InputNumber
 from datetime import datetime
-from django.views.decorators.http import require_POST  # Added import for require_POST
-from django.contrib import messages  # Import the messages module
+from django.views.decorators.http import require_POST
+from django.contrib import messages
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
 
 # Added logout_on_window_close view
 @require_POST
@@ -39,6 +42,13 @@ def logout_user(request):
     return redirect('login')
 
 def tracker(request):
+    if request.method == 'POST':
+        number = request.POST.get('number')
+        if len(number) == 8:
+            InputNumber.objects.create(user=request.user, number=number)
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid number length'})
     return render(request, 'tracker.html')
 
 def register_user(request):
