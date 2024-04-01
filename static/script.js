@@ -61,3 +61,31 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieValue;
     }
 });
+
+// Event listener for mouseover on red dots
+imageContainer.addEventListener('mouseover', function (event) {
+    if (event.target.classList.contains('red-dot')) {
+        // Create tooltip element
+        const tooltip = document.createElement('div');
+        tooltip.classList.add('tooltip');
+        // Set tooltip content
+        tooltip.innerHTML = '<div>Arrival Time</div><div class="arrival-time">' + getRandomArrivalTime() + '</div>';
+        // Position tooltip
+        tooltip.style.left = `${event.clientX}px`;
+        tooltip.style.top = `${event.clientY}px`;
+        // Append tooltip to image container
+        imageContainer.appendChild(tooltip);
+    }
+});
+
+// Event listener for mouseout from red dots
+imageContainer.addEventListener('mouseout', function (event) {
+    if (event.target.classList.contains('red-dot')) {
+        // Remove tooltip when mouse moves away from the red dot
+        const tooltip = document.querySelector('.tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    }
+});
+

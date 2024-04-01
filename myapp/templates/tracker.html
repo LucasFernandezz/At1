@@ -22,6 +22,22 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
+            cursor: pointer;
+        }
+        /* Style for the tooltip */
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            visibility: hidden;
+            z-index: 1;
+        }
+        /* Style for the arrival time */
+        .tooltip .arrival-time {
+            font-size: 12px;
+            margin-top: 5px;
         }
         /* Style for the input box */
         .number-input {
@@ -61,26 +77,48 @@
         .number-table th {
             background-color: #f2f2f2;
         }
-        /* Style for the delete button */
-        .delete-button {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        /* Style for the arrival table */
+        .arrival-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .arrival-table th, .arrival-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .arrival-table th {
+            background-color: #f2f2f2;
+        }
+        /* Style for the additional info text */
+        .additional-info {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
         }
     </style>
 </head>
 <body>
     <h1>Tracker Page</h1>
+    <!-- Additional info text -->
+    <div class="additional-info">
+        Click dots for extra info
+    </div>
     
+    <!-- Logout button -->
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="logout-button" type="submit">Logout</button>
+    </form>
+
     <!-- Image of Australia centered on the page -->
     <div class="image-container">
         <img class="australia-image" src="{% static 'australia.png' %}" alt="Australia">
     </div>
 
-    <!-- Input box for 8 numbers -->
-    <input type="text" class="number-input" maxlength="8" placeholder="Enter 8 numbers" pattern="[0-9]*" onkeypress="return isNumberKey(event)">
+    <!-- Input box for package ID -->
+    <input type="text" class="number-input" maxlength="8" placeholder="Enter package ID" pattern="[0-9]*" onkeypress="return isNumberKey(event)">
 
     <!-- Enter button -->
     <button class="enter-button" disabled>Find my Package</button>
@@ -91,11 +129,24 @@
             <tr>
                 <th>Package</th>
                 <th>ID</th>
-                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <!-- Table rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <!-- Arrival table -->
+    <table class="arrival-table">
+        <thead>
+            <tr>
+                <th>Package</th>
+                <th>Arrival Date</th>
+                <th>Arrival Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Arrival information will be dynamically added here -->
         </tbody>
     </table>
 
@@ -104,8 +155,10 @@
             const inputBox = document.querySelector('.number-input');
             const enterButton = document.querySelector('.enter-button');
             const tableBody = document.querySelector('.number-table tbody');
+            const arrivalTableBody = document.querySelector('.arrival-table tbody');
             const imageContainer = document.querySelector('.image-container');
-            let packageCounter = 1; // Start the package counter from 1
+            let enteredIds = new Set(); // Set to store entered IDs
+            let arrivalInfoMap = new Map(); // Map to store arrival information for each dot
 
             // Function to generate a random color
             function getRandomColor() {
@@ -113,6 +166,22 @@
                 const g = Math.floor(Math.random() * 200);
                 const b = Math.floor(Math.random() * 200);
                 return `rgb(${r}, ${g}, ${b})`;
+            }
+
+            // Function to generate a random arrival time and date
+            function getRandomArrivalTime(x, y) {
+                // Calculate the distance from the center on the x-axis
+                const distanceFromCenterX = Math.abs(x - 50);
+    
+                // Generate random date within a range of 30 days plus an additional day for every pixel away from the center
+                const randomDate = new Date(Date.now() + Math.floor(Math.random() * (30 + distanceFromCenterX)) * 24 * 60 * 60 * 1000);
+                const arrivalDate = randomDate.toLocaleDateString();
+    
+                // Generate a random time interval within a range of 12 hours plus an additional hour for every pixel away from the center
+                const randomTime = new Date(randomDate.getTime() + Math.floor(Math.random() * (12 + distanceFromCenterX / 5)) * 60 * 60 * 1000);
+                const arrivalTime = randomTime.toLocaleTimeString();
+    
+                return [arrivalDate, arrivalTime];
             }
 
             // Event listener for input change
@@ -125,41 +194,50 @@
             enterButton.addEventListener('click', function () {
                 // Check if 8 numbers are present
                 if (inputBox.value.length === 8) {
-                    // Generate random coordinates within the image bounds
-                    const x = Math.random() * 100; // Adjust this according to the image width
-                    const y = Math.random() * 100; // Adjust this according to the image height
+                    const enteredId = inputBox.value;
+                    // Check if ID already exists
+                    if (!enteredIds.has(enteredId)) {
+                        // Add ID to set
+                        enteredIds.add(enteredId);
+                        // Generate random coordinates within the image bounds
+                        const x = Math.random() * 100; // Adjust this according to the image width
+                        const y = Math.random() * 100; // Adjust this according to the image height
 
-                    // Create red dot element with a unique identifier
-                    const dotId = `dot-${packageCounter}`;
-                    const redDot = document.createElement('div');
-                    redDot.classList.add('red-dot');
-                    redDot.id = dotId;
-                    redDot.style.left = `${x}%`;
-                    redDot.style.top = `${y}%`;
-                    redDot.style.backgroundColor = getRandomColor();
+                        // Create red dot element with a unique identifier
+                        const redDot = document.createElement('div');
+                        redDot.classList.add('red-dot');
+                        redDot.style.left = `${x}%`;
+                        redDot.style.top = `${y}%`;
+                        redDot.style.backgroundColor = getRandomColor();
 
-                    // Append red dot element to the image container
-                    imageContainer.appendChild(redDot);
+                        // Append red dot element to the image container
+                        imageContainer.appendChild(redDot);
 
-                    // Add a row to the table
-                    const newRow = tableBody.insertRow();
-                    const packageCell = newRow.insertCell(0);
-                    const idCell = newRow.insertCell(1);
-                    const deleteCell = newRow.insertCell(2);
-                    packageCell.textContent = packageCounter++;
-                    idCell.textContent = inputBox.value;
-                    deleteCell.innerHTML = '<button class="delete-button">Delete</button>';
-                }
-            });
+                        // Add event listener to show popup on click
+                        redDot.addEventListener('click', function (event) {
+                            if (!arrivalInfoMap.has(redDot)) {
+                                const arrivalInfo = getRandomArrivalTime(x, y);
+                                arrivalInfoMap.set(redDot, arrivalInfo);
+                                const newRow = arrivalTableBody.insertRow();
+                                const packageCell = newRow.insertCell(0);
+                                const dateCell = newRow.insertCell(1);
+                                const timeCell = newRow.insertCell(2);
+                                packageCell.textContent = enteredIds.size; // Package number based on total entered IDs
+                                dateCell.textContent = arrivalInfo[0];
+                                timeCell.textContent = arrivalInfo[1];
+                            }
+                        });
 
-            // Event listener for Delete button click
-            tableBody.addEventListener('click', function (event) {
-                if (event.target.classList.contains('delete-button')) {
-                    const row = event.target.closest('tr');
-                    const dotId = `dot-${row.cells[0].textContent}`;
-                    const dotToRemove = document.getElementById(dotId);
-                    dotToRemove.remove();
-                    row.remove();
+                        // Add a row to the table
+                        const newRow = tableBody.insertRow();
+                        const packageCell = newRow.insertCell(0);
+                        const idCell = newRow.insertCell(1);
+                        packageCell.textContent = enteredIds.size; // Package number based on total entered IDs
+                        idCell.textContent = enteredId;
+                    } else {
+                        // Alert user if ID already exists
+                        alert('ID already exists!');
+                    }
                 }
             });
         });

@@ -1,0 +1,16 @@
+/* Style for the tooltip */
+.tooltip {
+    position: absolute;
+    background-color: #333;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    visibility: hidden; /* Hide tooltip by default */
+    z-index: 1; /* Ensure tooltip appears above other elements */
+}
+
+/* Style for the arrival time */
+.tooltip .arrival-time {
+    font-size: 12px;
+    margin-top: 5px;
+}
